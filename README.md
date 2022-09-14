@@ -1,4 +1,4 @@
-# FatCowIO Contract project
+# FatCow IO Trading Protocol Contract Project
 
 ###  requirements
 	* Python 3.7+ (native install)
