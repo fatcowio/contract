@@ -11,7 +11,7 @@ t_ticket_item = sp.TRecord(
     address = sp.TAddress,
     token_id = sp.TNat,
     seller = sp.TAddress,
-    buyer = sp.TOption(sp.TAddress),
+    buyer = sp.TAddress,
     price = sp.TMutez,
     state = t_ticket_item_state
 )
@@ -140,18 +140,19 @@ class Event(sp.Contract):
         
         # calculate the profit
         #sp.send(item.seller, sp.amount)
+        
         #to-do fee, threshold, royalty, revenue
-        #
-
+        #fee
+        #threshold
+        #royalty
+        #revenue
+        
         # add the item to user purchase list
         self.data.user_items[sp.sender].add(item.id)
-        # delete from the ticket list
-        # del self.data.ticket_items[item.id]
+        # update ticket buyer  
+        item.buyer = sp.sender
         # update the item state
-        # item.state = sp.variant("sold", sp.source)
-        # change status sold in ticket_items list 
-        
-        item.set("buyer" , sp.sender)
+        # change status sold in ticket_items list  
         item.state = sp.variant("sold", sp.source)
         
 
