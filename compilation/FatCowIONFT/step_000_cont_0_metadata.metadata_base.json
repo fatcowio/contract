@@ -1,0 +1,146 @@
+{
+  "name": "FatCow IO",
+  "version": "0.1.0",
+  "description": "This is the FatCow NFT base template for implementing tickets, implemented using the FA2 (TZIP-012) base.",
+  "interfaces": [ "TZIP-012", "TZIP-016" ],
+  "authors": [ "SmartPy <https://fatcow.io/#contact>" ],
+  "homepage": "https://fatcow.io",
+  "source": { "tools": [ "SmartPy" ], "location": "https://gitlab.com/SmartPy/smartpy/-/raw/master/python/templates/fa2_nft_minimal.py" },
+  "permissions": { "operator": "owner-or-operator-transfer", "receiver": "owner-no-hook", "sender": "owner-no-hook" },
+  "views": [
+    {
+      "name": "all_tokens",
+      "pure": true,
+      "description": "Return the list of all the `token_id` known to the contracts.",
+      "implementations": [
+        {
+          "michelsonStorageView": {
+            "returnType": { "prim": "list", "args": [ { "prim": "nat" } ] },
+            "code": [
+              { "prim": "DUP" },
+              { "prim": "GET", "args": [ { "int": "3" } ] },
+              { "prim": "CAR" },
+              { "prim": "NIL", "args": [ { "prim": "nat" } ] },
+              { "prim": "SWAP" },
+              { "prim": "PUSH", "args": [ { "prim": "nat" }, { "int": "0" } ] },
+              { "prim": "DUP" },
+              { "prim": "DUP", "args": [ { "int": "3" } ] },
+              { "prim": "COMPARE" },
+              { "prim": "GT" },
+              {
+                "prim": "LOOP",
+                "args": [
+                  [
+                    { "prim": "DUP" },
+                    { "prim": "DIG", "args": [ { "int": "3" } ] },
+                    { "prim": "SWAP" },
+                    { "prim": "CONS" },
+                    { "prim": "DUG", "args": [ { "int": "2" } ] },
+                    { "prim": "PUSH", "args": [ { "prim": "nat" }, { "int": "1" } ] },
+                    { "prim": "ADD" },
+                    { "prim": "DUP" },
+                    { "prim": "DUP", "args": [ { "int": "3" } ] },
+                    { "prim": "COMPARE" },
+                    { "prim": "GT" }
+                  ]
+                ]
+              },
+              { "prim": "DROP", "args": [ { "int": "2" } ] },
+              { "prim": "SWAP" },
+              { "prim": "DROP" },
+              { "prim": "NIL", "args": [ { "prim": "nat" } ] },
+              { "prim": "SWAP" },
+              { "prim": "ITER", "args": [ [ { "prim": "CONS" } ] ] }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "get_balance",
+      "pure": true,
+      "description": "Return the balance of an address for the specified `token_id`.",
+      "implementations": [
+        {
+          "michelsonStorageView": {
+            "parameter": { "prim": "pair", "args": [ { "prim": "address", "annots": [ "%owner" ] }, { "prim": "nat", "annots": [ "%token_id" ] } ] },
+            "returnType": { "prim": "int" },
+            "code": [
+              { "prim": "UNPAIR" },
+              { "prim": "SWAP" },
+              { "prim": "DUP" },
+              { "prim": "DUG", "args": [ { "int": "2" } ] },
+              { "prim": "GET", "args": [ { "int": "3" } ] },
+              { "prim": "CAR" },
+              { "prim": "SWAP" },
+              { "prim": "DUP" },
+              { "prim": "DUG", "args": [ { "int": "2" } ] },
+              { "prim": "CDR" },
+              { "prim": "COMPARE" },
+              { "prim": "LT" },
+              { "prim": "IF", "args": [ [], [ { "prim": "PUSH", "args": [ { "prim": "string" }, { "string": "FA2_TOKEN_UNDEFINED" } ] }, { "prim": "FAILWITH" } ] ] },
+              { "prim": "DUP" },
+              { "prim": "CAR" },
+              { "prim": "DIG", "args": [ { "int": "2" } ] },
+              { "prim": "CAR" },
+              { "prim": "GET", "args": [ { "int": "5" } ] },
+              { "prim": "DIG", "args": [ { "int": "2" } ] },
+              { "prim": "CDR" },
+              { "prim": "GET" },
+              { "prim": "IF_NONE", "args": [ [ { "prim": "PUSH", "args": [ { "prim": "int" }, { "int": "193" } ] }, { "prim": "FAILWITH" } ], [] ] },
+              { "prim": "COMPARE" },
+              { "prim": "EQ" },
+              {
+                "prim": "IF",
+                "args": [ [ { "prim": "PUSH", "args": [ { "prim": "int" }, { "int": "1" } ] } ], [ { "prim": "PUSH", "args": [ { "prim": "int" }, { "int": "0" } ] } ] ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "is_operator",
+      "pure": true,
+      "description": "Return whether `operator` is allowed to transfer `token_id` tokens\n        owned by `owner`.",
+      "implementations": [
+        {
+          "michelsonStorageView": {
+            "parameter": {
+              "prim": "pair",
+              "args": [
+                { "prim": "address", "annots": [ "%owner" ] },
+                { "prim": "pair", "args": [ { "prim": "address", "annots": [ "%operator" ] }, { "prim": "nat", "annots": [ "%token_id" ] } ] }
+              ]
+            },
+            "returnType": { "prim": "bool" },
+            "code": [ { "prim": "UNPAIR" }, { "prim": "SWAP" }, { "prim": "GET", "args": [ { "int": "3" } ] }, { "prim": "CDR" }, { "prim": "SWAP" }, { "prim": "MEM" } ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "total_supply",
+      "pure": true,
+      "description": "Return the total number of tokens for the given `token_id` if known\n        or fail if not.",
+      "implementations": [
+        {
+          "michelsonStorageView": {
+            "parameter": { "prim": "nat" },
+            "returnType": { "prim": "int" },
+            "code": [
+              { "prim": "UNPAIR" },
+              { "prim": "SWAP" },
+              { "prim": "GET", "args": [ { "int": "3" } ] },
+              { "prim": "CAR" },
+              { "prim": "COMPARE" },
+              { "prim": "GT" },
+              { "prim": "IF", "args": [ [], [ { "prim": "PUSH", "args": [ { "prim": "string" }, { "string": "FA2_TOKEN_UNDEFINED" } ] }, { "prim": "FAILWITH" } ] ] },
+              { "prim": "PUSH", "args": [ { "prim": "int" }, { "int": "1" } ] }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

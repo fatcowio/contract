@@ -1,0 +1,22 @@
+{
+  "prim": "Pair",
+  "args": [
+    {
+      "prim": "Pair",
+      "args": [
+        { "prim": "Pair", "args": [ { "string": "tz1hdQscorfqMzFqYxnrApuS5i6QSTuoAp3w" }, { "string": "tz1hdQscorfqMzFqYxnrApuS5i6QSTuoAp3w" } ] },
+        {
+          "prim": "Pair",
+          "args": [
+            { "string": "tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV" },
+            { "prim": "Pair", "args": [ [], [ { "prim": "Elt", "args": [ { "string": "" }, { "bytes": "68747470733a2f2f6578616d706c652e636f6d" } ] } ] ] }
+          ]
+        }
+      ]
+    },
+    {
+      "prim": "Pair",
+      "args": [ { "prim": "Pair", "args": [ { "int": "0" }, [] ] }, { "prim": "Pair", "args": [ { "prim": "False" }, { "prim": "Pair", "args": [ { "prim": "None" }, [] ] } ] } ]
+    }
+  ]
+}

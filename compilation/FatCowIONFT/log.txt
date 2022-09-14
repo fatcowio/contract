@@ -1,0 +1,11 @@
+Creating contract KT1TezoooozzSmartPyzzSTATiCzzzwwBFA1
+ -> (Pair (Pair (Pair "tz1hdQscorfqMzFqYxnrApuS5i6QSTuoAp3w" "tz1hdQscorfqMzFqYxnrApuS5i6QSTuoAp3w") (Pair "tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV" (Pair {} {Elt "" 0x68747470733a2f2f6578616d706c652e636f6d}))) (Pair (Pair 0 {}) (Pair False (Pair None {}))))
+ => compilation/FatCowIONFT/step_000_cont_0_storage.tz 1
+ => compilation/FatCowIONFT/step_000_cont_0_storage.json 22
+ => compilation/FatCowIONFT/step_000_cont_0_sizes.csv 2
+ => compilation/FatCowIONFT/step_000_cont_0_storage.py 1
+ => compilation/FatCowIONFT/step_000_cont_0_types.py 7
+ => compilation/FatCowIONFT/step_000_cont_0_metadata.metadata_base.json 146
+ => compilation/FatCowIONFT/step_000_cont_0_contract.tz 540
+ => compilation/FatCowIONFT/step_000_cont_0_contract.json 702
+ => compilation/FatCowIONFT/step_000_cont_0_contract.py 87
