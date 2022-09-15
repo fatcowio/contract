@@ -32,7 +32,7 @@ t_transfer_params = sp.TList(t_transfer_batch)
 class Event(sp.Contract):
     """A class Event contracts for FatCowIO Trading Protocol .
     """
-    def __init__(self, administrator,creator, metadata, fa2, fee, threshold, royalty, revenue, timeend, groupaddress):
+    def __init__(self, administrator,creator, metadata, fa2, fee, threshold, royalty, revenue, timeend, groupaddress,shareaddress):
         """Initializes the contracts.
         """
         # Initialize the contracts storage
@@ -48,7 +48,8 @@ class Event(sp.Contract):
             revenue=revenue,
             timeend=timeend,
             proposed_administrator=sp.none,
-            collects_paused=False,
+            ticket_paused=False,
+            item_id = sp.nat(1),
             ticket_items=sp.big_map(
                 tkey=sp.TNat,
                 tvalue=t_ticket_item,
@@ -57,7 +58,8 @@ class Event(sp.Contract):
                 tkey=sp.TAddress,
                 tvalue=sp.TSet(sp.TNat)
             ),
-            groupaddress=groupaddress)
+            groupaddress=groupaddress,
+            shareaddress=shareaddress)
 
     def check_is_administrator(self):
         """Checks that the address that called the entry point is the contracts
@@ -92,15 +94,13 @@ class Event(sp.Contract):
         sp.verify(sp.amount == self.data.fee, "fee must be equal to listing fee")
 
         # current FA2 contracts has no on-chain view
-
-
         item_id = self.data.item_id
         item = sp.record(
             id=item_id,
             address=params.contract_address,
             token_id=params.token_id,
             seller=sp.sender,
-            buyer=sp.none,
+            buyer=sp.sender,
             price=params.price,
             state=sp.variant("created", sp.sender)
         )
@@ -158,23 +158,31 @@ class Event(sp.Contract):
 
     @sp.entry_point
     def checkout_event(self, params):
+        
         sp.set_type(
             params,
             sp.TRecord(
-                contract_address=sp.TAddress,
-                token_id=sp.TNat,
-                price=sp.TMutez
-            ).layout(("contract_address", ("token_id", "price")))
+                share_address=sp.TAddress,
+            )
         )
-        sp.verify(params.price > sp.mutez(0), "price must be at least 1 mutez")
-        sp.verify(sp.amount == self.data.fee, "fee must be equal to listing fee")
-
-        # current FA2 contracts has no on-chain view
-
-
-        #to-do checkout_event
-        #
-
+     
+        #check admin role
+        self.check_is_administrator()
+        #to-do fee, threshold, royalty, revenue
+        #fee
+        #threshold
+        #royalty
+        #call share contract get all address value
+        c_share = sp.contract(sp.TInt, self.data.shareaddress, entry_point = "get_all_share").open_some()
+        sp.transfer(-42, sp.mutez(0), c_share)
+        #checkoput all revenue
+        #c_share_pause = sp.contract(sp.TInt, self.data.shareaddress, entry_point = "set_pause_checkout").open_some()
+        
+        #finish pause event and share 
+        #contract = sp.self_entry_point(entry_point = 'set_pause_buy')
+        #self.set_pause_buy(True)
+        
+     
 
     @sp.entry_point
     def delete_ticket_item(self, params):
@@ -193,7 +201,7 @@ class Event(sp.Contract):
         """Updates the Event management fees.
         """
         # Define the input parameter data type
-        sp.set_type(new_fee, sp.TNat)
+        sp.set_type(new_fee, sp.TMutez)
 
         # Check that the administrator executed the entry point
         self.check_is_administrator()
@@ -202,7 +210,7 @@ class Event(sp.Contract):
         self.check_no_tez_transfer()
 
         # Check that the new fee is not larger than 25%
-        sp.verify(new_fee <= 250, message="MP_WRONG_FEES")
+        sp.verify(new_fee <= sp.mutez(0), message="MP_WRONG_FEES")
 
         # Set the new management fee
         self.data.fee = new_fee
@@ -262,7 +270,7 @@ class Event(sp.Contract):
         self.data.proposed_administrator = sp.none
 
     @sp.entry_point
-    def set_pause_collects(self, pause):
+    def set_pause_buy(self, pause):
         """Pause or not the collects.
         """
         # Define the input parameter data type
@@ -275,7 +283,7 @@ class Event(sp.Contract):
         self.check_no_tez_transfer()
 
         # Pause or unpause the collects
-        self.data.collects_paused = pause
+        self.data.ticket_paused = pause
 
     @sp.onchain_view()
     def get_administrator(self):
@@ -326,10 +334,11 @@ sp.add_compilation_target("Event", Event(
     creator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
     metadata=sp.utils.metadata_of_url("ipfs://aaa"),
     fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
-    fee=sp.nat(25),
+    fee=sp.mutez(1),
     threshold=sp.utils.metadata_of_url("ipfs://thold"),
-    royalty=sp.nat(25),
-    revenue=sp.nat(25),
-    timeend=sp.nat(25),
-    groupaddress=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
+    royalty=sp.nat(100),
+    revenue=sp.nat(100),
+    timeend=sp.nat(10000),
+    groupaddress=sp.address("tz1KozzwY6L21JMV"),
+    shareaddress=sp.address("tz1KozzwY6LrGDMV"),
     ))

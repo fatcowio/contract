@@ -1,6 +1,9 @@
 import smartpy as sp
 
+"""A data structure for address<->share value string mapping .
+"""
 
+    
 
 class Share(sp.Contract):
     """A class Lend contracts for FatCowIO Trading Protocol .
@@ -8,12 +11,21 @@ class Share(sp.Contract):
     def __init__(self, administrator,creator, metadata, fa2, fee):
         """Initializes the contracts.
         """
-        # Define the contracts storage data types for clarity
-        self.init_type(sp.TRecord(
-        ))
-
         # Initialize the contracts storage
-        self.init()
+        self.init(administrator=administrator,
+            creator=creator,
+            metadata=metadata,
+            fa2=fa2,
+            fee=fee,
+            fee_recipient=administrator,
+            proposed_administrator = sp.none,
+            checkout_paused=False,
+            mapping_items=sp.big_map(
+                tkey=sp.TAddress,
+                tvalue=sp.TInt,
+            ),
+        )
+        
 
     def check_is_administrator(self):
         """Checks that the address that called the entry point is the contracts
@@ -43,6 +55,29 @@ class Share(sp.Contract):
 
         # Set the new proposed administrator address
         self.data.proposed_administrator = sp.some(proposed_administrator)
+        
+    @sp.entry_point
+    def generate_address_share(self):
+        """write the address in to share.
+        """
+        self.data.mapping_items[sp.sender] = 0
+        
+    @sp.onchain_view()
+    def get_address_share(self):
+        """Returns the value from share.
+        """
+        
+        #return the value of add
+        sp.result(self.data.mapping_items[sp.sender])
+        
+    @sp.onchain_view()
+    def get_all_share(self):
+        """Returns the value from share.
+        """
+        
+        #return the value of add
+        sp.result(self.data.mapping_items)
+       
 
     @sp.entry_point
     def accept_administrator(self):
@@ -66,7 +101,21 @@ class Share(sp.Contract):
         # Reset the proposed administrator value
         self.data.proposed_administrator = sp.none
 
+    @sp.entry_point
+    def set_pause_checkout(self, pause):
+        """Pause or not the collects.
+        """
+        # Define the input parameter data type
+        sp.set_type(pause, sp.TBool)
 
+        # Check that the administrator executed the entry point
+        self.check_is_administrator()
+
+        # Check that no tez have been transferred
+        self.check_no_tez_transfer()
+
+        # Pause or unpause the collects
+        self.data.checkout_paused = pause
 
     @sp.onchain_view()
     def get_administrator(self):
