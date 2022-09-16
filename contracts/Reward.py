@@ -15,8 +15,8 @@ t_balance_of_args = sp.TRecord(
 ).layout(("requests", "callback"))
 
 
-class NFT(sp.Contract):
-    """A class NFT contracts for FatCowIO Trading Protocol "
+class Reward(sp.Contract):
+    """A class Reward contracts for FatCowIO Trading Protocol "
     """
 
     def __init__(self, administrator, creator, metadata_base, metadata_url, fa2):
@@ -303,7 +303,7 @@ class NFT(sp.Contract):
 metadata_base = {
     "name": "FatCow IO",
     "version": "0.1.0",
-    "description": "This is the FatCow NFT base template for implementing tickets, implemented using the FA2 (TZIP-012) base.",
+    "description": "This is the FatCow Reward base template for implementing tickets, implemented using the FA2 (TZIP-012) base.",
     "interfaces": ["TZIP-012", "TZIP-016"],
     "authors": ["SmartPy <https://fatcow.io/#contact>"],
     "homepage": "https://fatcow.io",
@@ -333,29 +333,29 @@ if "templates" not in __name__:
     admin = sp.test_account("Administrator")
     alice = sp.test_account("Alice")
     bob = sp.test_account("Bob")
-    tok0_md = make_metadata(name="NFT Zero", decimals=1, symbol="Tok0")
-    tok1_md = make_metadata(name="NFT One", decimals=1, symbol="Tok1")
-    tok2_md = make_metadata(name="NFT Two", decimals=1, symbol="Tok2")
+    tok0_md = make_metadata(name="Token Zero", decimals=1, symbol="FatCowTok0")
+    tok1_md = make_metadata(name="Token One", decimals=1, symbol="Tok1")
+    tok2_md = make_metadata(name="Token Two", decimals=1, symbol="Tok2")
 
 
     @sp.add_test(name="Test")
     def test():
         scenario = sp.test_scenario()
-        c1 = NFT(admin.address,
+        c1 = Reward(admin.address,
                  admin.address,
                  metadata_base,
-                 "https://fatcow.io/nft",
+                 "https://example.com",
                  fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
                  )
         scenario += c1
 
 
     sp.add_compilation_target(
-        "FatCowIONFT",
-        NFT(admin.address,
+        "FatCowIOReward",
+        Reward(admin.address,
             admin.address,
             metadata_base,
-            "https://fatcow.io/nft",
+            "https://example.com",
             fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
             ),
     )
