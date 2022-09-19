@@ -32,7 +32,7 @@ t_transfer_params = sp.TList(t_transfer_batch)
 class Event(sp.Contract):
     """A class Event contracts for FatCowIO Trading Protocol .
     """
-    def __init__(self, administrator,creator, metadata, fa2, fee, threshold, royalty, revenue, timeend, groupaddress,shareaddress):
+    def __init__(self, administrator,creator, metadata, fa2, fee, threshold, royalty, revenue, timeend,shareaddress):
         """Initializes the contracts.
         """
         # Initialize the contracts storage
@@ -58,7 +58,6 @@ class Event(sp.Contract):
                 tkey=sp.TAddress,
                 tvalue=sp.TSet(sp.TNat)
             ),
-            groupaddress=groupaddress,
             shareaddress=shareaddress)
 
     def check_is_administrator(self):
@@ -339,6 +338,5 @@ sp.add_compilation_target("Event", Event(
     royalty=sp.nat(100),
     revenue=sp.nat(100),
     timeend=sp.nat(10000),
-    groupaddress=sp.address("tz1KozzwY6L21JMV"),
     shareaddress=sp.address("tz1KozzwY6LrGDMV"),
     ))
