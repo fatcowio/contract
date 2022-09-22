@@ -38,6 +38,7 @@ class Event(sp.Contract):
         # Initialize the contracts storage
         self.init(
             administrator=administrator,
+            proposed_administrator=creator,
             creator=creator,
             metadata=metadata,
             fa2=fa2,
@@ -46,8 +47,8 @@ class Event(sp.Contract):
             threshold=threshold,
             royalty=royalty,
             revenue=revenue,
-            timeend=timeend,
-            proposed_administrator=sp.none,
+            timestart=sp.timestamp_from_utc_now(),
+            timeend=sp.timestamp_from_utc_now().add_seconds(timeend),
             ticket_paused=False,
             item_id = sp.nat(1),
             ticket_items=sp.big_map(
@@ -58,7 +59,9 @@ class Event(sp.Contract):
                 tkey=sp.TAddress,
                 tvalue=sp.TSet(sp.TNat)
             ),
-            shareaddress=shareaddress)
+            shareaddress=shareaddress
+            
+            )
 
     def check_is_administrator(self):
         """Checks that the address that called the entry point is the contracts
@@ -71,6 +74,18 @@ class Event(sp.Contract):
         """
         sp.verify(sp.amount == sp.tez(0), message="MP_TEZ_TRANSFER")
 
+
+ 
+    #accept tez in contract
+    @sp.entry_point
+    def default(self):
+        pass
+    
+    @sp.entry_point
+    def withdraw(self, amount):
+        sp.set_type(amount, sp.TMutez)
+        sp.send(sp.sender, amount)
+ 
     @sp.entry_point
     def create_ticket_item(self, params):
         """
@@ -116,26 +131,27 @@ class Event(sp.Contract):
             )
         )
 
-        sp.verify(self.data.ticket_items.contains(params.item_id), "ticket item")
-        item = self.data.ticket_items[params.item_id]
-        sp.verify(item.price == sp.amount, "transaction token is not enough")
+        # sp.verify(self.data.ticket_items.contains(params.item_id), "ticket item")
+        # item = self.data.ticket_items[params.item_id]
+        # sp.verify(item.price == sp.amount, "transaction token is not enough")
         
-        transfer = sp.contract(t_transfer_params, item.address, "transfer").open_some("address is not a FA2 contracts")
+        # transfer = sp.contract(t_transfer_params, item.address, "transfer").open_some("address is not a FA2 contracts")
 
-        # transfer amount
-        sp.transfer(sp.list([
-            sp.record(
-                from_=item.seller,
-                txs=sp.list([
-                    sp.record(
-                        to_=sp.sender,
-                        token_id=item.token_id,
-                        amount=sp.nat(1)
-                    )
-                ])
-            )
-        ], t=t_transfer_batch), sp.tez(0), transfer)
+        # # transfer amount
+        # sp.transfer(sp.list([
+        #     sp.record(
+        #         from_=item.seller,
+        #         txs=sp.list([
+        #             sp.record(
+        #                 to_=sp.sender,
+        #                 token_id=item.token_id,
+        #                 amount=sp.nat(1)
+        #             )
+        #         ])
+        #     )
+        # ], t=t_transfer_batch), sp.tez(0), transfer)
         
+        sp.send(sp.sender, sp.tez(10))
         
         # calculate the profit
         #sp.send(item.seller, sp.amount)
@@ -146,13 +162,13 @@ class Event(sp.Contract):
         #royalty
         #revenue
         
-        # add the item to user purchase list
-        self.data.user_items[sp.sender].add(item.id)
-        # update ticket buyer  
-        item.buyer = sp.sender
-        # update the item state
-        # change status sold in ticket_items list  
-        item.state = sp.variant("sold", sp.source)
+        # # add the item to user purchase list
+        # self.data.user_items[sp.sender].add(item.id)
+        # # update ticket buyer  
+        # item.buyer = sp.sender
+        # # update the item state
+        # # change status sold in ticket_items list  
+        # item.state = sp.variant("sold", sp.source)
         
 
     @sp.entry_point
@@ -327,8 +343,33 @@ class Event(sp.Contract):
             amount=sp.mutez(0),
             destination=c)
 
+    @sp.offchain_view()
+    def get_contract_amount(self):
+        sp.result(sp.amount)
+        
+# sp.add_compilation_target("Event", Event(
+#     administrator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
+#     creator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
+#     metadata=sp.utils.metadata_of_url("ipfs://aaa"),
+#     fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
+#     fee=sp.mutez(1),
+#     threshold=sp.utils.metadata_of_url("ipfs://thold"),
+#     royalty=sp.nat(100),
+#     revenue=sp.nat(100),
+#     timeend=sp.nat(10000),
+#     shareaddress=sp.address("tz1KozzwY6LrGDMV"),
+#     ))
 
-sp.add_compilation_target("Event", Event(
+@sp.add_test(name="main")
+def test():
+    scenario = sp.test_scenario()
+
+    # Test address
+    admin = sp.test_account("admin")
+    alice = sp.test_account("alice")
+    
+    # Create contract
+    event = Event(
     administrator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
     creator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
     metadata=sp.utils.metadata_of_url("ipfs://aaa"),
@@ -339,4 +380,9 @@ sp.add_compilation_target("Event", Event(
     revenue=sp.nat(100),
     timeend=sp.nat(10000),
     shareaddress=sp.address("tz1KozzwY6LrGDMV"),
-    ))
+    )
+    scenario += event
+  
+    # test
+    scenario.h2("Playground Test 1")
+    scenario += event.buy_ticket(item_id='1111').run(sender = admin, now = sp.timestamp(7))
