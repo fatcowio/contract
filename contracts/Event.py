@@ -32,7 +32,8 @@ t_transfer_params = sp.TList(t_transfer_batch)
 class Event(sp.Contract):
     """A class Event contracts for FatCowIO Trading Protocol .
     """
-    def __init__(self, administrator,creator, metadata, fa2, fee, threshold, royalty, revenue, timeend,shareaddress):
+ 
+    def __init__(self, administrator,creator, metadata, nftfa2,tick_fee,commission, threshold, royalty, revenue, timeend,shareaddress):
         """Initializes the contracts.
         """
         # Initialize the contracts storage
@@ -41,9 +42,10 @@ class Event(sp.Contract):
             proposed_administrator=creator,
             creator=creator,
             metadata=metadata,
-            fa2=fa2,
-            fee=fee,
-            fee_recipient=administrator,
+            fa2=nftfa2,
+            tick_fee=tick_fee,
+            commission=commission,
+            commission_recipient=administrator,
             threshold=threshold,
             royalty=royalty,
             revenue=revenue,
@@ -69,12 +71,24 @@ class Event(sp.Contract):
         """
         sp.verify(sp.sender == self.data.administrator, message="MP_NOT_ADMIN")
 
+    def check_is_proposed_administrator(self):
+        """Checks that the address that called the entry point is the contracts
+        administrator.
+        """
+        sp.verify(sp.sender == self.data.proposed_administrator, message="MP_NOT_ADMIN")
+
+    def check_is_creator(self):
+        """Checks that the address that called the entry point is the contracts
+        administrator.
+        """
+        sp.verify(sp.sender == self.data.creator, message="MP_NOT_CREATOR")
+
     def check_no_tez_transfer(self):
         """Checks that no tez were transferred in the operation.
         """
         sp.verify(sp.amount == sp.tez(0), message="MP_TEZ_TRANSFER")
 
-
+        
  
     #accept tez in contract
     @sp.entry_point
@@ -82,9 +96,27 @@ class Event(sp.Contract):
         pass
     
     @sp.entry_point
-    def withdraw(self, amount):
+    def checkout_event(self, amount):
+        self.check_is_administrator()
+        self.check_is_proposed_administrator()
         sp.set_type(amount, sp.TMutez)
-        sp.send(sp.sender, amount)
+        sp.verify(sp.balance >= amount, "Not Enough Withdraw Balance!")
+
+        #checkout to-do 
+        #compute share contributors revenue 
+        contributors_fee_amount = sp.local(
+                "contributors_fee_amount", sp.split_tokens(sp.balance, self.data.revenue, 1000))
+
+        #compute commission fee 
+        commission_fee_amount = sp.local(
+                "fatcow_commission_amount", sp.split_tokens(sp.balance, self.data.commission, 1000))
+
+        #send to contributors 
+        sp.send(self.data.administrator, contributors_fee_amount.value)
+
+        #send to commission
+        sp.send(self.data.commission_recipient, commission_fee_amount.value)
+
  
     @sp.entry_point
     def create_ticket_item(self, params):
@@ -171,31 +203,31 @@ class Event(sp.Contract):
         # item.state = sp.variant("sold", sp.source)
         
 
-    @sp.entry_point
-    def checkout_event(self, params):
+    # @sp.entry_point
+    # def checkout_event(self, params):
         
-        sp.set_type(
-            params,
-            sp.TRecord(
-                share_address=sp.TAddress,
-            )
-        )
+    #     sp.set_type(
+    #         params,
+    #         sp.TRecord(
+    #             share_address=sp.TAddress,
+    #         )
+    #     )
      
-        #check admin role
-        self.check_is_administrator()
-        #to-do fee, threshold, royalty, revenue
-        #fee
-        #threshold
-        #royalty
-        #call share contract get all address value
-        c_share = sp.contract(sp.TInt, self.data.shareaddress, entry_point = "get_all_share").open_some()
-        sp.transfer(-42, sp.mutez(0), c_share)
-        #checkoput all revenue
-        #c_share_pause = sp.contract(sp.TInt, self.data.shareaddress, entry_point = "set_pause_checkout").open_some()
+    #     #check admin role
+    #     self.check_is_administrator()
+    #     #to-do fee, threshold, royalty, revenue
+    #     #fee
+    #     #threshold
+    #     #royalty
+    #     #call share contract get all address value
+    #     c_share = sp.contract(sp.TInt, self.data.shareaddress, entry_point = "get_all_share").open_some()
+    #     sp.transfer(-42, sp.mutez(0), c_share)
+    #     #checkoput all revenue
+    #     #c_share_pause = sp.contract(sp.TInt, self.data.shareaddress, entry_point = "set_pause_checkout").open_some()
         
-        #finish pause event and share 
-        #contract = sp.self_entry_point(entry_point = 'set_pause_buy')
-        #self.set_pause_buy(True)
+    #     #finish pause event and share 
+    #     #contract = sp.self_entry_point(entry_point = 'set_pause_buy')
+    #     #self.set_pause_buy(True)
         
      
 
