@@ -136,8 +136,6 @@ class Event(sp.Contract):
                 price=sp.TMutez
             ).layout(("contract_address", ("token_id", "price")))
         )
-        sp.verify(params.price > sp.mutez(0), "price must be at least 1 mutez")
-        sp.verify(sp.amount == self.data.fee, "fee must be equal to listing fee")
 
         # current FA2 contracts has no on-chain view
         item_id = self.data.item_id
@@ -150,6 +148,8 @@ class Event(sp.Contract):
             price=params.price,
             state=sp.variant("created", sp.sender)
         )
+
+        # add ticket to contract
         self.data.ticket_items[item_id] = item
         self.data.item_id += sp.nat(1)
 
@@ -162,6 +162,9 @@ class Event(sp.Contract):
                 item_id=sp.TNat,
             )
         )
+        
+        #sp.send(sp.sender, amount)
+        sp.send(sp.self_address, self.data.tick_fee)
 
         # sp.verify(self.data.ticket_items.contains(params.item_id), "ticket item")
         # item = self.data.ticket_items[params.item_id]
@@ -183,7 +186,7 @@ class Event(sp.Contract):
         #     )
         # ], t=t_transfer_batch), sp.tez(0), transfer)
         
-        sp.send(sp.sender, sp.tez(10))
+        # sp.send(sp.sender, sp.tez(10))
         
         # calculate the profit
         #sp.send(item.seller, sp.amount)
