@@ -33,7 +33,7 @@ class Event(sp.Contract):
     """A class Event contracts for FatCowIO Trading Protocol .
     """
  
-    def __init__(self, administrator,creator, metadata, nftfa2,tick_fee,commission, threshold, royalty, revenue, timeend,shareaddress):
+    def __init__(self, administrator,creator, metadata, nftfa2,tick_amount,tick_fee,commission, threshold, royalty, revenue, timeend,shareaddress):
         """Initializes the contracts.
         """
         # Initialize the contracts storage
@@ -43,6 +43,7 @@ class Event(sp.Contract):
             creator=creator,
             metadata=metadata,
             fa2=nftfa2,
+            tick_amount=tick_amount,
             tick_fee=tick_fee,
             commission=commission,
             commission_recipient=administrator,
@@ -152,7 +153,61 @@ class Event(sp.Contract):
         # add ticket to contract
         self.data.ticket_items[item_id] = item
         self.data.item_id += sp.nat(1)
+        
+        
+        
+    @sp.entry_point
+    def delete_ticket_item(self, params):
+        """
+        make the item inactive
+        """
+        sp.set_type(params, sp.TNat)
+        sp.verify(params < self.data.item_id, "id must < current id")
+        sp.verify(self.data.ticket_items.contains(params), "item is not exists")
+        item = self.data.ticket_items[params]
+        with sp.if_(item.state.is_variant("created")):
+            item.state = sp.variant("inactive", sp.sender)
 
+ 
+    @sp.entry_point
+    def transfer_proposed_administrator(self, proposed_administrator):
+        """Proposes to transfer the contracts administrator to another address.
+        """
+        # Define the input parameter data type
+        sp.set_type(proposed_administrator, sp.TAddress)
+
+        # Check that the administrator executed the entry point
+        self.check_is_administrator()
+
+        # Check that no tez have been transferred
+        self.check_no_tez_transfer()
+
+        # Set the new proposed administrator address
+        self.data.proposed_administrator = proposed_administrator
+
+
+    @sp.entry_point
+    def set_pause_buy(self, pause):
+        """Pause or not the collects.
+        """
+        # Define the input parameter data type
+        sp.set_type(pause, sp.TBool)
+
+        # Check that the administrator executed the entry point
+        self.check_is_administrator()
+
+        # Check that no tez have been transferred
+        self.check_no_tez_transfer()
+
+        # Pause or unpause the collects
+        self.data.ticket_paused = pause
+
+    @sp.onchain_view()
+    def get_administrator(self):
+        """Returns the Event administrator address.
+        """
+        sp.result(self.data.administrator)
+        
 
     @sp.entry_point
     def buy_ticket(self, params):
@@ -162,9 +217,26 @@ class Event(sp.Contract):
                 item_id=sp.TNat,
             )
         )
+
+        #verify ticket items exist
+        sp.verify(self.data.ticket_items.contains(params.item_id), "Ticket item not exist!")
+        # item = self.data.ticket_items[params.item_id]
+        # #verify ticket price and amount
+        # sp.verify(item.price == sp.amount, "transaction token is not enough")
+        
+        sp.send(sp.self_address, self.data.tick_fee)
+        
+    # @sp.entry_point
+    # def buy_ticket(self, params):
+    #     sp.set_type(
+    #         params,
+    #         sp.TRecord(
+    #             item_id=sp.TNat,
+    #         )
+    #     )
         
         #sp.send(sp.sender, amount)
-        sp.send(sp.self_address, self.data.tick_fee)
+        #sp.send(sp.self_address, self.data.tick_fee)
 
         # sp.verify(self.data.ticket_items.contains(params.item_id), "ticket item")
         # item = self.data.ticket_items[params.item_id]
@@ -232,108 +304,7 @@ class Event(sp.Contract):
     #     #contract = sp.self_entry_point(entry_point = 'set_pause_buy')
     #     #self.set_pause_buy(True)
         
-     
 
-    @sp.entry_point
-    def delete_ticket_item(self, params):
-        """
-        make the item inactive
-        """
-        sp.set_type(params, sp.TNat)
-        sp.verify(params < self.data.item_id, "id must < current id")
-        sp.verify(self.data.ticket_items.contains(params), "item is not exists")
-        item = self.data.ticket_items[params]
-        with sp.if_(item.state.is_variant("created")):
-            item.state = sp.variant("inactive", sp.sender)
-
-    @sp.entry_point
-    def update_fee(self, new_fee):
-        """Updates the Event management fees.
-        """
-        # Define the input parameter data type
-        sp.set_type(new_fee, sp.TMutez)
-
-        # Check that the administrator executed the entry point
-        self.check_is_administrator()
-
-        # Check that no tez have been transferred
-        self.check_no_tez_transfer()
-
-        # Check that the new fee is not larger than 25%
-        sp.verify(new_fee <= sp.mutez(0), message="MP_WRONG_FEES")
-
-        # Set the new management fee
-        self.data.fee = new_fee
-
-    @sp.entry_point
-    def update_fee_recipient(self, new_fee_recipient):
-        """Updates the Event management fee recipient address.
-        """
-        # Define the input parameter data type
-        sp.set_type(new_fee_recipient, sp.TAddress)
-
-        # Check that the administrator executed the entry point
-        self.check_is_administrator()
-
-        # Check that no tez have been transferred
-        self.check_no_tez_transfer()
-
-        # Set the new management fee recipient address
-        self.data.fee_recipient = new_fee_recipient
-
-    @sp.entry_point
-    def transfer_administrator(self, proposed_administrator):
-        """Proposes to transfer the contracts administrator to another address.
-        """
-        # Define the input parameter data type
-        sp.set_type(proposed_administrator, sp.TAddress)
-
-        # Check that the administrator executed the entry point
-        self.check_is_administrator()
-
-        # Check that no tez have been transferred
-        self.check_no_tez_transfer()
-
-        # Set the new proposed administrator address
-        self.data.proposed_administrator = sp.some(proposed_administrator)
-
-    @sp.entry_point
-    def accept_administrator(self):
-        """The proposed administrator accepts the contracts administrator
-        responsabilities.
-        """
-        # Check that there is a proposed administrator
-        sp.verify(self.data.proposed_administrator.is_some(),
-                  message="MP_NO_NEW_ADMIN")
-
-        # Check that the proposed administrator executed the entry point
-        sp.verify(sp.sender == self.data.proposed_administrator.open_some(),
-                  message="MP_NOT_PROPOSED_ADMIN")
-
-        # Check that no tez have been transferred
-        self.check_no_tez_transfer()
-
-        # Set the new administrator address
-        self.data.administrator = sp.sender
-
-        # Reset the proposed administrator value
-        self.data.proposed_administrator = sp.none
-
-    @sp.entry_point
-    def set_pause_buy(self, pause):
-        """Pause or not the collects.
-        """
-        # Define the input parameter data type
-        sp.set_type(pause, sp.TBool)
-
-        # Check that the administrator executed the entry point
-        self.check_is_administrator()
-
-        # Check that no tez have been transferred
-        self.check_no_tez_transfer()
-
-        # Pause or unpause the collects
-        self.data.ticket_paused = pause
 
     @sp.onchain_view()
     def get_administrator(self):
@@ -405,15 +376,17 @@ def test():
     
     # Create contract
     event = Event(
-    administrator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
+    administrator=sp.address("tz1b98a2Wqc7VWtpLWkgwnF2DxFLz9WHmHQL"),
     creator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
     metadata=sp.utils.metadata_of_url("ipfs://aaa"),
-    fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
-    fee=sp.mutez(1),
-    threshold=sp.utils.metadata_of_url("ipfs://thold"),
-    royalty=sp.nat(100),
-    revenue=sp.nat(100),
-    timeend=sp.nat(10000),
+    nftfa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
+    tick_amount=sp.mutez(100),
+    tick_fee=sp.mutez(1000),
+    threshold=sp.nat(10000000),
+    commission=sp.nat(5),
+    royalty=sp.nat(0),
+    revenue=sp.nat(10),
+    timeend=sp.int(10000),
     shareaddress=sp.address("tz1KozzwY6LrGDMV"),
     )
     scenario += event

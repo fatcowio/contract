@@ -20,6 +20,11 @@ class NFT(sp.Contract):
     """
 
     def __init__(self, administrator, creator, metadata_base, metadata_url, fa2):
+        
+        metadata = sp.set_type_expr(metadata, sp.TBigMap(sp.TString, sp.TBytes))
+        self.ledger_type = "Fungible"
+        ledger, supply, token_metadata = self.initial_mint(token_metadata, ledger)
+        
         self.init(
             administrator=administrator,
             creator=creator,
@@ -52,6 +57,30 @@ class NFT(sp.Contract):
             self.total_supply,
         ]
         self.init_metadata("metadata_base", metadata_base)
+        
+    def initial_mint(self, token_metadata=[], ledger={}):
+        """Perform a mint before the origination.
+
+        Returns `ledger`, `supply` and `token_metadata`.
+        """
+        token_metadata_dict = {}
+        supply = {}
+        for token_id, metadata in enumerate(token_metadata):
+            metadata = sp.record(token_id=token_id, token_info=metadata)
+            token_metadata_dict[token_id] = metadata
+            # Token that are in token_metadata and not in ledger exist with supply = 0
+            supply[token_id] = 0
+        for (address, token_id), amount in ledger.items():
+            if token_id not in token_metadata_dict:
+                raise Exception("Ledger contains a token_id with no metadata")
+            supply[token_id] += amount
+        return (ledger, supply, token_metadata_dict)
+
+    #accept tez in contract
+    @sp.entry_point
+    def default(self):
+        pass
+
 
     @sp.entry_point
     def transfer(self, batch):
