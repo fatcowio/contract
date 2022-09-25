@@ -185,6 +185,22 @@ class Event(sp.Contract):
         # Set the new proposed administrator address
         self.data.proposed_administrator = proposed_administrator
 
+    @sp.entry_point
+    def accept_administrator(self):
+        """The proposed administrator accepts the contracts administrator
+        responsabilities.
+        """
+        # Check that there is a proposed administrator
+        sp.verify(self.data.proposed_administrator.is_some(),message="MINTER_NO_NEW_ADMIN")
+
+        # Check that the proposed administrator executed the entry point
+        sp.verify(sp.sender == self.data.proposed_administrator.open_some(),essage="MINTER_NOT_PROPOSED_ADMIN")
+
+        # Set the new administrator address
+        self.data.administrator = sp.sender
+
+        # Reset the proposed administrator value
+        self.data.proposed_administrator = sp.none
 
     @sp.entry_point
     def set_pause_buy(self, pause):
