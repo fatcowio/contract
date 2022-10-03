@@ -392,7 +392,7 @@ def test():
     
     # Create contract
     event = Event(
-    administrator=sp.address("tz1b98a2Wqc7VWtpLWkgwnF2DxFLz9WHmHQL"),
+    administrator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
     creator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
     metadata=sp.utils.metadata_of_url("ipfs://aaa"),
     nftfa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
@@ -408,5 +408,5 @@ def test():
     scenario += event
   
     # test
-    scenario.h2("Playground Test 1")
-    scenario += event.buy_ticket(item_id='1111').run(sender = admin, now = sp.timestamp(7))
+    # scenario.h2("Playground Test 1")
+    # scenario += event.buy_ticket(item_id='1111').run(sender = admin, now = sp.timestamp(7))
