@@ -368,19 +368,7 @@ class Event(sp.Contract):
     @sp.offchain_view()
     def get_contract_amount(self):
         sp.result(sp.amount)
-        
-# sp.add_compilation_target("Event", Event(
-#     administrator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
-#     creator=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
-#     metadata=sp.utils.metadata_of_url("ipfs://aaa"),
-#     fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
-#     fee=sp.mutez(1),
-#     threshold=sp.utils.metadata_of_url("ipfs://thold"),
-#     royalty=sp.nat(100),
-#     revenue=sp.nat(100),
-#     timeend=sp.nat(10000),
-#     shareaddress=sp.address("tz1KozzwY6LrGDMV"),
-#     ))
+
 
 @sp.add_test(name="main")
 def test():
