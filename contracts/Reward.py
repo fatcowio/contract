@@ -119,17 +119,7 @@ class Reward(sp.Contract):
 
     @sp.entry_point
     def balance_of(self, args):
-        """Send the balance of multiple account / token pairs to a callback
-        address.
 
-        transfer 0 mutez to `callback` with corresponding response.
-
-        Args:
-            callback (contracts): Where to callback the answer.
-            requests: List of requested balances.
-        Raises:
-            `FA2_TOKEN_UNDEFINED`, `FA2_CALLBACK_NOT_FOUND`
-        """
 
         def f_process_request(req):
             sp.verify(req.token_id < self.data.next_token_id, "FA2_TOKEN_UNDEFINED")
@@ -344,7 +334,7 @@ if "templates" not in __name__:
         c1 = Reward(admin.address,
                  admin.address,
                  metadata_base,
-                 "https://example.com",
+                 "https://fatcow.io",
                  fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
                  )
         scenario += c1
@@ -355,7 +345,7 @@ if "templates" not in __name__:
         Reward(admin.address,
             admin.address,
             metadata_base,
-            "https://example.com",
+            "https://fatcow.io",
             fa2=sp.address("tz1KozzwY6LrGDsZkTPLGwbh13HNezL21JMV"),
             ),
     )
